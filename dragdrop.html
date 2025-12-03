@@ -1,130 +1,212 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-<meta charset="UTF-8">
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Petualangan Huruf A–Z</title>
+
 <style>
     body {
         font-family: Arial, sans-serif;
         text-align: center;
-        background: #E6F4F1;
+        background-color: #e7f4f1;
         margin: 0;
-        padding: 20px;
+        padding: 0;
     }
+
     h1 {
-        color: #2B7A78;
-        font-size: 32px;
-        margin-bottom: 10px;
-    }
-    #game-area {
-        margin-top: 30px;
-    }
-    .huruf, .target {
-        display: inline-block;
-        width: 120px;
-        height: 120px;
-        margin: 20px;
-        line-height: 120px;
-        font-size: 60px;
+        font-size: 50px;
         font-weight: bold;
-        border-radius: 20px;
+        color: #333;
+        margin-top: 50px;
+    }
+
+    .page {
+        display: none;
+    }
+
+    .active {
+        display: block;
+    }
+
+    #startBtn, #restartBtn, #nextBtn {
+        padding: 18px 36px;
+        background-color: #bcdff5;
+        border: none;
+        border-radius: 12px;
+        font-size: 24px;
+        cursor: pointer;
+        margin-top: 30px;
+        font-weight: bold;
+        color: #333;
+    }
+
+    #startBtn:hover, #restartBtn:hover, #nextBtn:hover {
+        background-color: #c8e9d6;
+    }
+
+    #letter {
+        font-size: 180px;
+        margin: 40px 0;
+        color: #333;
         cursor: grab;
     }
-    .huruf {
-        background: #FEFFFF;
-        border: 4px solid #3AAFA9;
-        color: #17252A;
+
+    .target-box {
+        width: 180px;
+        height: 180px;
+        margin: auto;
+        background-color: #fff;
+        border-radius: 18px;
+        font-size: 150px;
+        line-height: 180px;
+        color: #333;
+        border: 5px solid #bcdff5;
     }
-    .target {
-        background: #DEF2F1;
-        border: 4px dashed #2B7A78;
+
+    #feedbackCorrect {
+        font-size: 48px;
+        color: #4CAF50;
+        font-weight: bold;
+        margin-top: 40px;
     }
-    #feedback {
+
+    #feedbackWrong {
+        font-size: 42px;
+        color: #FF6F6F;
+        font-weight: bold;
+        margin-top: 40px;
+    }
+
+    #scoreBox {
         font-size: 28px;
         font-weight: bold;
         margin-top: 20px;
-        height: 40px;
+        color: #333;
     }
-    #score {
-        font-size: 22px;
-        margin-top: 10px;
-        color: #17252A;
-    }
-    #next-btn {
+
+    .stars {
+        font-size: 100px;
         margin-top: 20px;
-        padding: 12px 25px;
-        font-size: 18px;
-        border: none;
-        background: #3AAFA9;
-        color: white;
-        border-radius: 10px;
-        cursor: pointer;
-        display: none;
-    }
-    #next-btn:hover {
-        background: #2B7A78;
     }
 </style>
 </head>
 
 <body>
 
-<h1>Petualangan Huruf A–Z</h1>
-<p>Seret huruf ke kotak yang sesuai!</p>
-
-<div id="score">Skor: 0</div>
-
-<div id="game-area">
-    <div id="huruf" class="huruf" draggable="true"></div>
-    <div id="target" class="target"></div>
+<!-- ================= HALAMAN MULAI ================= -->
+<div id="startPage" class="page active">
+    <h1>Petualangan Huruf A–Z</h1>
+    <button id="startBtn">Mulai</button>
 </div>
 
-<div id="feedback"></div>
-<button id="next-btn" onclick="generateHuruf()">Lanjut</button>
+<!-- ================= HALAMAN GAME ================= -->
+<div id="gamePage" class="page">
+    <div id="scoreBox">Skor: 0</div>
+
+    <div id="letter" draggable="true">A</div>
+
+    <div class="target-box" id="targetBox">a</div>
+
+    <div id="feedbackCorrect" style="display:none;">✔ Benar! Hebat!</div>
+    <div id="feedbackWrong" style="display:none;">✖ Salah, coba lagi!</div>
+
+    <button id="nextBtn" style="display:none;">Lanjut</button>
+</div>
+
+<!-- ================ HALAMAN SELESAI ================= -->
+<div id="finishPage" class="page">
+    <h1>🎉 Permainan Selesai! 🎉</h1>
+    <div class="stars">⭐ ⭐ ⭐</div>
+    <h2 id="finalScore"></h2>
+    <button id="restartBtn">Main Lagi</button>
+</div>
 
 <script>
-    let skor = 0;
-    let hurufBesar = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-    let hurufKecil = "abcdefghijklmnopqrstuvwxyz";
-    let currentHuruf = "";
+let currentIndex = 0;
+let score = 0;
+const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
+const smallLetters = "abcdefghijklmnopqrstuvwxyz".split("");
 
-    function generateHuruf() {
-        document.getElementById("feedback").innerHTML = "";
-        document.getElementById("next-btn").style.display = "none";
+// ELEMENTS
+const startPage = document.getElementById("startPage");
+const gamePage   = document.getElementById("gamePage");
+const finishPage = document.getElementById("finishPage");
 
-        let randomIndex = Math.floor(Math.random() * 26);
-        currentHuruf = hurufBesar[randomIndex];
+const letterEl = document.getElementById("letter");
+const targetEl = document.getElementById("targetBox");
+const scoreBox = document.getElementById("scoreBox");
 
-        document.getElementById("huruf").textContent = currentHuruf;
-        document.getElementById("target").textContent = hurufKecil[randomIndex];
-    }
+const feedbackCorrect = document.getElementById("feedbackCorrect");
+const feedbackWrong   = document.getElementById("feedbackWrong");
+const nextBtn = document.getElementById("nextBtn");
 
-    document.getElementById("huruf").addEventListener("dragstart", function(event) {
-        event.dataTransfer.setData("text", event.target.textContent);
-    });
+document.getElementById("startBtn").onclick = () => {
+    startPage.classList.remove("active");
+    finishPage.classList.remove("active");
+    gamePage.classList.add("active");
+    loadLetter();
+};
 
-    document.getElementById("target").addEventListener("dragover", function(event) {
-        event.preventDefault();
-    });
+document.getElementById("restartBtn").onclick = () => {
+    score = 0;
+    currentIndex = 0;
+    finishPage.classList.remove("active");
+    gamePage.classList.add("active");
+    loadLetter();
+};
 
-    document.getElementById("target").addEventListener("drop", function(event) {
-        event.preventDefault();
-        let draggedHuruf = event.dataTransfer.getData("text");
+function loadLetter() {
+    let big = letters[currentIndex];
+    let small = smallLetters[currentIndex];
+    
+    letterEl.innerText = big;
+    targetEl.innerText = small;
 
-        if (draggedHuruf.toLowerCase() === currentHuruf.toLowerCase()) {
-            skor++;
-            document.getElementById("feedback").innerHTML = "✔ Benar! Hebat!";
-            document.getElementById("feedback").style.color = "#2B7A78";
-        } else {
-            document.getElementById("feedback").innerHTML = "✖ Salah, coba lagi!";
-            document.getElementById("feedback").style.color = "red";
+    feedbackCorrect.style.display = "none";
+    feedbackWrong.style.display = "none";
+    nextBtn.style.display = "none";
+
+    scoreBox.innerText = "Skor: " + score;
+}
+
+// DRAG EVENTS
+letterEl.addEventListener("dragstart", (e) => {
+    e.dataTransfer.setData("text", letterEl.innerText);
+});
+
+targetEl.addEventListener("dragover", (e) => {
+    e.preventDefault();
+});
+
+targetEl.addEventListener("drop", (e) => {
+    const draggedLetter = e.dataTransfer.getData("text");
+    const correctSmall = smallLetters[letters.indexOf(draggedLetter)];
+
+    if (targetEl.innerText === correctSmall) {
+        score++;
+        feedbackCorrect.style.display = "block";
+        nextBtn.style.display = "inline-block";
+
+        if (score === 26) {
+            gamePage.classList.remove("active");
+            finishPage.classList.add("active");
+            document.getElementById("finalScore").innerText = 
+                "Skor Kamu: " + score + "/26";
         }
+    } else {
+        feedbackWrong.style.display = "block";
+        setTimeout(() => {
+            feedbackWrong.style.display = "none";
+        }, 1200);
+    }
+});
 
-        document.getElementById("score").innerHTML = "Skor: " + skor;
-        document.getElementById("next-btn").style.display = "inline-block";
-    });
-
-    generateHuruf();
+nextBtn.onclick = () => {
+    currentIndex++;
+    if (currentIndex >= 26) currentIndex = 0;
+    loadLetter();
+};
 </script>
 
 </body>
